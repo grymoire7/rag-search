@@ -47,3 +47,7 @@ matches. Those are sent with the query to OpenAI to formulate the answer.
 python rag.py "What advice did the caterpillar give to Alice?"
 ```
 
+## References
+This idea is based on the workflow described in [this post](https://paragshah.medium.com/unlock-the-power-of-your-knowledge-base-with-openai-gpt-apis-db9a1138cac4)
+and others though the code is now fairly different.  It makes heavy use of the [llama-index](https://github.com/run-llama/llama_index) library.
+
