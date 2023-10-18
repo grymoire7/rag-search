@@ -28,7 +28,12 @@ python rag.py -h   # see the help
 
 - Adjust the path to your OpenAI credentials
 - Check that the `data` and `indices` directories exist
-- Make some documents available in the `data` directory (it may be a tree)
+
+## Collect some documents
+We now need to make some documents available. First, pick name for this set.
+Say, "mydocs". Then add your docs to the `./data/mydocs` directory. This may be
+a tree of documents or even a symlink to docs.  In the next step, your index will
+be created in the `./indices/mydocs` directory.
 
 ## Create the index
 Here the documents are split up (chunked) and sent to OpenAI a piece at a time
@@ -36,15 +41,23 @@ to create the index in a local vector store.  In this case, the vector store is
 just a collection of JSON files.
 
 ```bash
-python rag.py -c "create index"
+python rag.py -c <index_name>
 ```
+
+Continuing with the previsous example, the command would be `python rag.py -c mydocs` and
+the index would be created in the `./indices/mydocs` directory.
 
 ## Start asking questions
 When you ask a question, it's compared to the local vector store to find the nearest
 matches. Those are sent with the query to OpenAI to formulate the answer.
 
-```bash
-python rag.py "What advice did the caterpillar give to Alice?"
+```
+python rag.py <data_set_name> # in our example: pythone rag.py mydocs
+
+> Ask your question here
+See your response appear here
+
+> quit  # Ask another question or quit
 ```
 
 ## References
