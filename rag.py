@@ -34,15 +34,14 @@ os.environ["OPENAI_API_KEY"] = credentials["access_token"]
 os.environ["OPENAI_ORGANIZATION"] = credentials["organization_id"]
 
 # Save the index in .JSON file for repeated use. Saves money on ADA API calls
-def create_index_from_dir(persist_dir):
+def create_index_from_dir(source_dir, persist_dir):
     # Load the documents from a directory.
-    # This example uses SimpleDirectoryReader, there are many options at https://llamahub.ai/
-    # Use SimpleDirectoryReader to read all the txt files in a folder
+    # We use SimpleDirectoryReader to read all the txt files in a folder
+    # There are many options at https://llamahub.ai/
     documents = SimpleDirectoryReader(input_dir=source_dir, recursive=True).load_data()
     print(f"...loaded {len(documents)} documents from {source_dir}")
 
     # This example uses PDF reader, there are many options at https://llamahub.ai/
-    # Use SimpleDirectoryReader to read all the txt files in a folder
     # PDFReader = download_loader("PDFReader")
     # loader = PDFReader()
     # documents = loader.load_data(file=pdf_file)
@@ -64,28 +63,41 @@ def load_index(persist_dir):
 
 
 def main(args):
-    print(args.question)
-
     # TODO: Remove argument and just create index if it doesn't exist.
     if args.create_index:
-        index = create_index_from_dir(persist_dir)
-        print("Index created")
+        print(f"Creating index from {source_dir} to {persist_dir}...")
+        index = create_index_from_dir(source_dir, persist_dir)
+        print("Index created.")
         return
-    else:
-        index = load_index(persist_dir)
+
+    index = load_index(persist_dir)
 
     # Retrieval, node poseprocessing, response synthesis. 
     query_engine = index.as_query_engine()
 
-    # Run the query engine on a user question.
-    response = query_engine.query(args.question)
-    print(response)
+    question = ''
+    print("\nAsk a question. Type 'quit' or ctrl-c to quit.\n")
+    while True:
+        print('> ', end='')
+        try:
+            question = input()
+        except KeyboardInterrupt:
+            print("\nExiting...")
+            exit()
+
+        if question == 'quit' or question == 'exit':
+            break
+
+        # Run the query engine on a user question.
+        response = query_engine.query(question)
+        print("\n", response, "\n")
+
+    print("Bye!\n")
 
 
 if __name__ == '__main__':
     parser = ArgumentParser(description=__doc__, prog='rag.py', epilog='Have fun!')
     parser.add_argument('-c', '--create-index', help='(re)create the index', action='store_true')
-    parser.add_argument('question', help='question string to ask the index')
     args = parser.parse_args()
     main(args)
 
