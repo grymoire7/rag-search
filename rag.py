@@ -23,10 +23,8 @@ from llama_index.storage.index_store import SimpleIndexStore
 from argparse import ArgumentParser
 
 # script configuration
-persist_dir = "./indices/"
-source_dir = "./data/"
-
 openai_config = "projects/infrastructure/charts/secrets/values/integration/openai-configuration/openai.yml"
+
 credentials_path = os.path.join(os.path.expanduser('~'), openai_config)
 credentials = yaml.safe_load(open(credentials_path, "r"))
 
@@ -34,12 +32,12 @@ os.environ["OPENAI_API_KEY"] = credentials["access_token"]
 os.environ["OPENAI_ORGANIZATION"] = credentials["organization_id"]
 
 # Save the index in .JSON file for repeated use. Saves money on ADA API calls
-def create_index_from_dir(source_dir, persist_dir):
+def create_index_from_dir(data_dir, index_dir):
     # Load the documents from a directory.
     # We use SimpleDirectoryReader to read all the txt files in a folder
     # There are many options at https://llamahub.ai/
-    documents = SimpleDirectoryReader(input_dir=source_dir, recursive=True).load_data()
-    print(f"...loaded {len(documents)} documents from {source_dir}")
+    documents = SimpleDirectoryReader(input_dir=data_dir, recursive=True).load_data()
+    print(f"...loaded {len(documents)} documents from {data_dir}")
 
     # This example uses PDF reader, there are many options at https://llamahub.ai/
     # PDFReader = download_loader("PDFReader")
@@ -48,14 +46,14 @@ def create_index_from_dir(source_dir, persist_dir):
 
     # Chunking and Embedding of the chunks.
     index = GPTVectorStoreIndex.from_documents(documents)
-    index.storage_context.persist(persist_dir=persist_dir)
+    index.storage_context.persist(persist_dir=index_dir)
     return index
 
-def load_index(persist_dir):
+def load_index(index_dir):
     storage_context = StorageContext.from_defaults(
-        docstore=SimpleDocumentStore.from_persist_dir(persist_dir=persist_dir),
-        vector_store=SimpleVectorStore.from_persist_dir(persist_dir=persist_dir),
-        index_store=SimpleIndexStore.from_persist_dir(persist_dir=persist_dir),
+        docstore=SimpleDocumentStore.from_persist_dir(persist_dir=index_dir),
+        vector_store=SimpleVectorStore.from_persist_dir(persist_dir=index_dir),
+        index_store=SimpleIndexStore.from_persist_dir(persist_dir=index_dir),
     )
 
     index = load_index_from_storage(storage_context)
@@ -63,14 +61,16 @@ def load_index(persist_dir):
 
 
 def main(args):
-    # TODO: Remove argument and just create index if it doesn't exist.
+    user_data_dir = f"./data/{args.dir}/"
+    user_index_dir = f"./indices/{args.dir}/"
+
     if args.create_index:
-        print(f"Creating index from {source_dir} to {persist_dir}...")
-        index = create_index_from_dir(source_dir, persist_dir)
+        print(f"Creating index from {user_data_dir} to {user_index_dir}...")
+        index = create_index_from_dir(user_data_dir, user_index_dir)
         print("Index created.")
         return
 
-    index = load_index(persist_dir)
+    index = load_index(user_index_dir)
 
     # Retrieval, node poseprocessing, response synthesis. 
     query_engine = index.as_query_engine()
@@ -98,6 +98,7 @@ def main(args):
 if __name__ == '__main__':
     parser = ArgumentParser(description=__doc__, prog='rag.py', epilog='Have fun!')
     parser.add_argument('-c', '--create-index', help='(re)create the index', action='store_true')
+    parser.add_argument('dir', help='data and indices subdirectory name')
     args = parser.parse_args()
     main(args)
 
