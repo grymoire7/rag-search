@@ -21,15 +21,23 @@ from llama_index.storage.docstore import SimpleDocumentStore
 from llama_index.vector_stores import SimpleVectorStore
 from llama_index.storage.index_store import SimpleIndexStore
 from argparse import ArgumentParser
+from dotenv import load_dotenv
 
 # script configuration
-openai_config = "projects/infrastructure/charts/secrets/values/integration/openai-configuration/openai.yml"
+load_dotenv()
 
-credentials_path = os.path.join(os.path.expanduser('~'), openai_config)
-credentials = yaml.safe_load(open(credentials_path, "r"))
+# We assume the OpenAI tokens are set in the environment as OPENAI_API_KEY
+# and OPENAI_ORGANIZATION unless the environment variable OPENAI_CONFIG_PATH is
+# set. If set, we read that yaml file and extract the access_token and
+# organization_id from there.
+def set_openai_credentials():
+    openai_config_path = os.environ.get('OPENAI_CONFIG_PATH') or None
 
-os.environ["OPENAI_API_KEY"] = credentials["access_token"]
-os.environ["OPENAI_ORGANIZATION"] = credentials["organization_id"]
+    if openai_config_path is not None:
+        credentials = yaml.safe_load(open(opeai_config_path, "r"))
+
+        os.environ["OPENAI_API_KEY"] = credentials["access_token"]
+        os.environ["OPENAI_ORGANIZATION"] = credentials["organization_id"]
 
 # Save the index in .JSON file for repeated use. Saves money on ADA API calls
 def create_index_from_dir(data_dir, index_dir):
@@ -61,6 +69,8 @@ def load_index(index_dir):
 
 
 def main(args):
+    set_openai_credentials()
+
     user_data_dir = f"./data/{args.dir}/"
     user_index_dir = f"./indices/{args.dir}/"
 
@@ -90,7 +100,7 @@ def main(args):
 
         # Run the query engine on a user question.
         response = query_engine.query(question)
-        print("\n", response, "\n")
+        print(f"\n{response}\n")
 
     print("Bye!\n")
 
